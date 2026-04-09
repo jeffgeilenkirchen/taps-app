@@ -1,30 +1,53 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-const today = new Date().toLocaleDateString('en-US', { 
-  weekday: 'long', 
-  month: 'long', 
-  day: 'numeric' 
+const API_KEY = 'c786ef2ef7fb582c464a632c011430c8';
+const CITY = 'Florence,IT';
+
+const today = new Date().toLocaleDateString('en-US', {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric'
 });
 
 export default function DashboardScreen() {
+  const [weather, setWeather] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${CITY}&units=imperial&appid=${API_KEY}`)
+      .then(res => res.json())
+      .then(data => {
+        setWeather(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      
-      {/* Header */}
+
       <View style={styles.header}>
         <Text style={styles.dateText}>{today}</Text>
         <Text style={styles.cityText}>Florence, Italy</Text>
         <Text style={styles.tagline}>Day 4 of 11</Text>
       </View>
 
-      {/* Weather Widget */}
       <View style={[styles.widget, styles.weatherWidget]}>
         <Text style={styles.widgetLabel}>WEATHER</Text>
-        <Text style={styles.weatherTemp}>72°F</Text>
-        <Text style={styles.widgetContent}>Rain expected at 4:00 PM</Text>
+        {loading ? (
+          <ActivityIndicator color="#ffffff" size="large" />
+        ) : weather && weather.main ? (
+          <>
+            <Text style={styles.weatherTemp}>{Math.round(weather.main.temp)}°F</Text>
+            <Text style={styles.weatherDesc}>{weather.weather[0].description.charAt(0).toUpperCase() + weather.weather[0].description.slice(1)}</Text>
+            <Text style={styles.weatherDesc}>Humidity: {weather.main.humidity}%</Text>
+          </>
+        ) : (
+          <Text style={styles.weatherDesc}>Weather unavailable</Text>
+        )}
       </View>
 
-      {/* Next Activity Widget */}
       <View style={[styles.widget, styles.activityWidget]}>
         <Text style={styles.widgetLabel}>NEXT ACTIVITY</Text>
         <Text style={styles.activityTitle}>Uffizi Gallery Tour</Text>
@@ -34,20 +57,17 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      {/* Advisor Tip Widget */}
       <View style={[styles.widget, styles.advisorWidget]}>
         <Text style={styles.widgetLabel}>FROM YOUR ADVISOR</Text>
         <Text style={styles.widgetContent}>Arrive 15 minutes early for your tour — the entrance can get busy.</Text>
       </View>
 
-      {/* Phrase of the Day Widget */}
       <View style={[styles.widget, styles.phraseWidget]}>
         <Text style={styles.widgetLabel}>PHRASE OF THE DAY</Text>
         <Text style={styles.phraseText}>"Dov'è il bagno?"</Text>
         <Text style={styles.phraseTranslation}>Where is the bathroom?</Text>
       </View>
 
-      {/* Local Tip Widget */}
       <View style={[styles.widget, styles.tipWidget]}>
         <Text style={styles.widgetLabel}>LOCAL TIP</Text>
         <Text style={styles.widgetContent}>The best gelato near the Uffizi is at Gelateria dei Neri — skip the tourist spots on the main piazza.</Text>
@@ -119,7 +139,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1.5,
-    color: '#999',
+    color: '#a8c4e0',
     marginBottom: 8,
   },
   weatherTemp: {
@@ -127,6 +147,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#ffffff',
     marginBottom: 4,
+  },
+  weatherDesc: {
+    fontSize: 16,
+    color: '#ffffff',
+    lineHeight: 22,
   },
   widgetContent: {
     fontSize: 16,
